@@ -1,7 +1,7 @@
 {
 	"name": "node-red-contrib-http-ntlm-req",
 	"description": "HTTP request with NTLM",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/dmvstar/node-red-contrib-http-ntlm-req.git"
@@ -14,24 +14,29 @@
 	},
 	"dependencies": {
 		"httpntlm": ">=1.7.6",
-		"xml2js": ">=0.4.19"
+		"xml2js": "^0.4.22"
 	},
 	"keywords": [
-		"node-red", "http", "ntlm"
+		"node-red",
+		"http",
+		"ntlm"
 	],
 	"main": "index.js",
 	"license": "MIT",
-	"author": [{
+	"author": [
+		{
 			"name": "StarDust",
 			"email": "dmvstar.devel@gmail.com",
 			"url": "https://github.com/dmvstar"
-		}, {
+		},
+		{
 			"name": "Chebotarov",
 			"email": "swiftshade@gmail.com",
 			"url": "https://github.com/ArcanePhysics"
 		}
 	],
-	"maintainers": [{
+	"maintainers": [
+		{
 			"name": "Stardust",
 			"email": "dmvstar.devel@gmail.com"
 		}
