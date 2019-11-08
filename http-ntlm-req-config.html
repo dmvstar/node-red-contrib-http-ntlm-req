@@ -1,0 +1,75 @@
+<script type="text/javascript">
+    RED.nodes.registerType('http-ntlm-req-config', {
+        category: 'config',
+        defaults: {
+            name: {value: "",  required: true},
+            auth: {value: "0", required: true},
+            user: {value: "",  required: false},
+            pass: {value: "",  required: false},
+            key:  {value: "",  required: false},
+            cert: {value: "",  required: false},
+            token: {value: "", required: false},
+            doman: {value: "", required: false}
+        },
+        label: function () {
+            return this.name;
+        }
+    });
+</script>
+
+
+<script type="text/x-red" data-template-name="http-ntlm-req-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-globe"></i> Name</label>
+        <input type="text" id="node-config-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-auth"><i class="fa fa-unlock"></i> Auth</label>
+        <select type="text" id="node-config-input-auth">
+            <option value="0">None</option>
+            <option value="1">Basic Auth</option>
+            <option value="2">Client Certificate</option>
+            <option value="3">WS-Security</option>
+            <option value="4">Bearer Token</option>
+            <option value="5">NTLM Auth</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-user"><i class="fa fa-user"></i> Username</label>
+        <input type="text" id="node-config-input-user">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-pass"><i class="fa fa-lock"></i> Password</label>
+        <input type="password" id="node-config-input-pass">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-key"><i class="fa fa-file"></i> Client Key</label>
+        <input type="text" id="node-config-input-key">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-cert"><i class="fa fa-file"></i> Client Certificate</label>
+        <input type="text" id="node-config-input-cert">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-token"><i class="fa fa-key"></i> Token</label>
+        <input type="text" id="node-config-input-token">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-doman"><i class="fa fa-doman"></i> Domain</label>
+        <input type="text" id="node-config-input-doman">
+    </div>
+</script>
+
+
+<script type="text/x-red" data-help-name="http-ntlm-req-config">
+    <p>Create AUTH config</p>
+    <p>To set up request, create a new AUTH config:</p> 
+    <p>
+        <ul>
+            <li> Select <i>Auth</i> method, the default would be set to None.</li>
+            <li> Fill in <i>Username</i>, <i>Password</i>, <i>Client Key</i>, <i>Client Certificate</i>, <i>Token</i> if needed. </li>
+        </ul>
+    </p>
+</script>
+
+

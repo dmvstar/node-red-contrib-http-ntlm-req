@@ -1,0 +1,111 @@
+module.exports = function(RED) {
+    function HttpNtlmReqNode(config) {
+		var httpntlm = require('httpntlm');
+		var fs = require('fs');
+		
+        RED.nodes.createNode(this, config);
+        var node = this;
+		
+        this.name = config.name;
+        this.url  = config.url;
+        this.method  = config.method;
+        this.authconf = RED.nodes.getNode(config.auth);
+		var realURL = node.url
+
+		var connData = {url: realURL, username: "", password: "", domain: "", workstation: ""}; 
+//var url = "http://kv-v-is3-pp/ScroogeWebServices_MB/ScroogeClientService.asmx?wsdl";
+        try {
+			node.on('input', function(msg) {
+				
+				var method = node.method;
+
+//node.warn('Start URL name['+node.name+']auth['+node.authconf.auth+']node.method['+node.method+']msg.method['+msg.method+']: '+ connData.url);
+				
+				if(msg.method !== undefined) {
+					switch (msg.method) {
+						case 'GET':
+							method = '0';
+						break;
+						case 'POST':
+							method = '1';
+						break;
+					}
+				}
+				
+				switch (node.authconf.auth) {
+					
+					case '5':
+						connData = {
+							url: realURL, 
+							username: node.authconf.user, 
+							password: node.authconf.pass, 
+							domain: node.authconf.doman, 
+							workstation: ''}; 
+					break;
+					/*
+					case default: 
+						connData = {url: realURL}; 
+					break;
+					*/
+				}
+
+				switch (method) {
+					case '0':
+						realURL = this.url + msg.payload;
+						connData.url = realURL; 
+//node.warn('Get ['+realURL+']');
+
+						httpntlm.get(connData, function (err, res){
+							msg.payload = res.body;
+							fs.writeFile('Result_GET_'+node.name, res.body, function(){
+							});	
+						});	
+					break;
+					case '1':
+						realURL = this.url;
+						connData.url = realURL; 
+				//msg.payload='"<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">    <soapenv:Header/>    <soapenv:Body>       <tem:GetClientById>          <tem:clientId>1878653</tem:clientId>       </tem:GetClientById>    </soapenv:Body> </soapenv:Envelope>';
+				
+						var xml = 		'<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"> ' +
+										'<soapenv:Header/> '+
+										'<soapenv:Body> '+
+										'   <tem:GetClientById> '+
+										'      <tem:clientId>1878653</tem:clientId> '+
+										'   </tem:GetClientById> '+
+										'</soapenv:Body> '+
+										'</soapenv:Envelope>';
+						xml = msg.payload;						
+						var postURL = this.url;//node.url.substr(0,node.url.length-5);
+//node.warn('Post ['+postURL+']');
+			
+						connData = {
+										url: postURL, 
+										username: node.authconf.user, 
+										password: node.authconf.pass, 
+										domain: node.authconf.doman, 
+										workstation: '',
+										body: xml,
+										headers: { 'Content-Type': 'text/xml' }							
+									}; 
+						
+						httpntlm.post(connData, function (err, res){
+							msg.payload = res.body;
+							fs.writeFile('Result_POST_'+node.name, res.body, function(){
+							});	
+						});	
+						
+					break;
+					default:
+						node.error('No method defined ! ['+postURL+']');
+						throw new Error('No method defined !');
+					break;
+				}	
+				node.send(msg);
+			});
+        } catch (err) {
+            node.status({fill: "red", shape: "dot", text: err.message});
+            node.error(err.message, msg);
+        }
+    }
+    RED.nodes.registerType("http-ntlm-req",HttpNtlmReqNode);
+}

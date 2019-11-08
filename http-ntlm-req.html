@@ -1,0 +1,59 @@
+<script type="text/javascript">
+    RED.nodes.registerType('http-ntlm-req',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: 	{value:""},
+            url:  	{ value: "",  required: true },
+            method:	{ value: 0 ,  required: true},
+            auth:	{value: "", type: "http-ntlm-req-config"}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "white-globe.png",
+        label: function() {
+            return this.name||"http ntlm req";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="http-ntlm-req">
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+	
+    <div class="form-row">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="URL">
+    </div>
+	
+    <div class="form-row">
+        <label for="node-input-auth"><i class="icon-tag"></i> Auth</label>
+        <input type="text" id="node-input-auth" placeholder="Auth">
+    </div>
+	
+    <div class="form-row">
+        <label for="node-input-method"><i class="fa fa-unlock"></i> Method</label>
+        <select type="text" id="node-input-method">
+            <option value="0">GET</option>
+            <option value="1">POST</option>
+        </select>
+    </div>
+
+	
+</script>
+
+<script type="text/x-red" data-help-name="http-ntlm-req">
+    <p>A node http-ntlm-req is a node to do HTTP(S) requests with NTLM authentification.</p>
+    <p>To set up HTTP request, create a new soap config </p>
+    <p>
+        <ul>
+	            <li>If defined msg.method then override selected method in node.</li>
+	            <li>For GET method msg.payload used as additional for url (for example ?wsdl for get WSDL or ?param1=1&amp;param2=2).</li>
+	            <li>For POST method msg.payload used as content for post.</li>
+        </ul>
+    </p>
+		
+</script>
