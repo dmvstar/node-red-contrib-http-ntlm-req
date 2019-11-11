@@ -48,8 +48,7 @@ module.exports = function(RED) {
 							break;
 						}
 						httpntlm.get(connData, function (err, res){
-							fs.writeFile('Result_GET_'+node.name, res.body, function(){
-							});	
+							// fs.writeFile('Result_GET_'+node.name, res.body, function(){});	
 							
 							retValue = res.body;
 							msg.payload = retValue;
@@ -79,10 +78,10 @@ module.exports = function(RED) {
 							break;
 						}
 			
-						httpntlm.post(connData, function (err, res){
+							httpntlm.post(connData, function (err, res){
 
-							fs.writeFile('Result_POST_'+node.name, res.body, function(){
-							});	
+							//fs.writeFile('Result_POST_'+node.name, res.body, function(){});	
+
 							retValue = res.body;
 							msg.payload = retValue;
 							
