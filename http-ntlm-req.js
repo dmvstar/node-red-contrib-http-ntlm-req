@@ -50,8 +50,14 @@ module.exports = function(RED) {
 						httpntlm.get(connData, function (err, res){
 							// fs.writeFile('Result_GET_'+node.name, res.body, function(){});	
 							
-							retValue = res.body;
-							msg.payload = retValue;
+							if (res.body !== undefined ) {
+								retValue = res.body;
+								msg.payload = retValue;
+							} else {
+								node.status({fill: "red", shape: "dot", text: err.message});
+								node.error(err.message, msg);
+							}
+							
 							node.send(msg);
 							
 						});	
@@ -77,14 +83,21 @@ module.exports = function(RED) {
 								connData = {url: realURL, body: xml, headers: { 'Content-Type': 'text/xml' }}; 
 							break;
 						}
-			
+							
+							// 11,11,2019 if empty result - NR crashed
 							httpntlm.post(connData, function (err, res){
 
 							//fs.writeFile('Result_POST_'+node.name, res.body, function(){});	
 
-							retValue = res.body;
-							msg.payload = retValue;
+							if (res.body !== undefined ) {
+								retValue = res.body;
+								msg.payload = retValue;
+							} else {
+								node.status({fill: "red", shape: "dot", text: err.message});
+								node.error(err.message, msg);
+							}
 							
+							/*
 							try {
 								var convert = require('xml-js');
 								var result = convert.xml2json(retValue, {compact: true, spaces: 4});
@@ -92,7 +105,7 @@ module.exports = function(RED) {
 								node.status({fill: "red", shape: "dot", text: err.message});
 								node.error(err.message, msg);
 							}	
-        					
+        					*/
 							node.send(msg);
 							
 						});	
@@ -104,7 +117,7 @@ module.exports = function(RED) {
 					break;
 				}
 /*
-node.warn('2 retValue '+retValue); // EMPTY RESULT
+				node.warn('2 retValue '+retValue); // EMPTY RESULT
 				msg.payload = retValue;
 				node.send(msg);
 */				
