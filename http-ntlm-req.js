@@ -11,8 +11,12 @@ module.exports = function(RED) {
         this.method  = config.method;
         this.authconf = RED.nodes.getNode(config.auth);
 		var realURL = node.url
+		
+		var debug = false;
 
 		var connData = {url: realURL, username: "", password: "", domain: "", workstation: ""}; 
+		
+		var requestFail = false, requestError = '';
 
         try {
 			node.on('input', function(msg) {
@@ -28,10 +32,9 @@ module.exports = function(RED) {
 						break;
 					}
 				}
-				
 //node.warn('0 node.method ['+node.method+'] method ['+method+'] msg.method ['+msg.method+']');
-				
 				switch (method) {
+					// GET
 					case '0':
 						realURL = this.url + msg.payload;
 						switch (node.authconf.auth) {
@@ -48,21 +51,29 @@ module.exports = function(RED) {
 							break;
 						}
 						httpntlm.get(connData, function (err, res){
-							// fs.writeFile('Result_GET_'+node.name, res.body, function(){});	
-							
-							if (res.body !== undefined ) {
+							requestFail = false;
+							requestError = '';
+							if(res !== undefined && res.body !== undefined) {
 								retValue = res.body;
 								msg.payload = retValue;
+								if(res.statusCode !== 200) { 
+									requestFail = true; 
+									requestError = 'Response from server: '+res.statusCode;
+									//var requestMessage = searchKey();
+									node.status({fill: "red", shape: "dot", text: requestError});
+									node.error(requestError, msg);
+								}
 							} else {
 								node.status({fill: "red", shape: "dot", text: err.message});
 								node.error(err.message, msg);
+								//throw new Error('No body in response !');
 							}
-							
+							//if(requestFail) throw new Error(requestError);
 							node.send(msg);
-							
 						});	
 					break;
 					case '1':
+						// POST
 						realURL = this.url;
 						connData.url = realURL; 
 						var xml = msg.payload;						
@@ -83,44 +94,54 @@ module.exports = function(RED) {
 								connData = {url: realURL, body: xml, headers: { 'Content-Type': 'text/xml' }}; 
 							break;
 						}
-							
-							// 11,11,2019 if empty result - NR crashed
 							httpntlm.post(connData, function (err, res){
+							requestFail = false;
+							requestError = '';
 
-							//fs.writeFile('Result_POST_'+node.name, res.body, function(){});	
-
-							if (res.body !== undefined ) {
+							if(res !== undefined && res.body !== undefined) {
 								retValue = res.body;
 								msg.payload = retValue;
+								if(res.statusCode !== 200) { 
+									requestFail = true; 
+									requestError = 'Response from server: '+res.statusCode;
+									node.status({fill: "red", shape: "dot", text: requestError});
+									node.error(requestError, msg);
+								}
+if(debug){
+	fs.writeFile('POST_Result_'+node.name+'.json', JSON.stringify(res), function(){});	
+	console.log(res);
+	console.log(res.statusCode);
+}
 							} else {
 								node.status({fill: "red", shape: "dot", text: err.message});
 								node.error(err.message, msg);
+if(debug){
+	fs.writeFile('POST_Error_'+node.name+'.json', JSON.stringify(err), function(){});	
+	console.log(err);
+}	
+								//throw new Error('No body in response !');
 							}
-							
-							/*
-							try {
-								var convert = require('xml-js');
-								var result = convert.xml2json(retValue, {compact: true, spaces: 4});
-							} catch (err) {
-								node.status({fill: "red", shape: "dot", text: err.message});
-								node.error(err.message, msg);
-							}	
-        					*/
+							if(requestFail) {
+								try {
+									var convert = require('xml-js');
+									var result = convert.xml2json(retValue, {compact: true, spaces: 4});
+if(debug){
+	fs.writeFile('POST_ErrorR_'+node.name+'.json', result, function(){});	
+}
+								} catch (err) {
+									node.status({fill: "red", shape: "dot", text: err.message});
+									node.error(err.message, msg);
+								}	
+							}
 							node.send(msg);
-							
 						});	
-						
 					break;
 					default:
+						node.status({fill: "red", shape: "dot", text: err.message});
 						node.error('No method defined ! ['+postURL+']');
-						throw new Error('No method defined !');
+						//throw new Error('No method defined !');
 					break;
 				}
-/*
-				node.warn('2 retValue '+retValue); // EMPTY RESULT
-				msg.payload = retValue;
-				node.send(msg);
-*/				
 			});
         } catch (err) {
             node.status({fill: "red", shape: "dot", text: err.message});
