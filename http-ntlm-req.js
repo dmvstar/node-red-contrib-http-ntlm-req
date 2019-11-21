@@ -23,6 +23,15 @@ module.exports = function(RED) {
 			node.on('input', function(msg) {
 				var method = node.method;
 				var retValue = "";
+				var defaulHeader = {};
+				var contentTypeHeader = 'application/json'; //'text/xml;charset=UTF-8';
+				if( msg.headers !== undefined )	defaultHeader = msg.headers;
+				if( msg.headers['Content-Type'] === undefined ) msg.headers['Content-Type'] = contentTypeHeader;
+
+if(debug){
+	console.log(msg.headers);
+}
+				
 				if(msg.method !== undefined) {
 					switch (msg.method) {
 						case 'GET':
@@ -89,11 +98,11 @@ module.exports = function(RED) {
 										domain: node.authconf.doman, 
 										workstation: '',
 										body: xml,
-										headers: { 'Content-Type': 'text/xml' }							
+										headers: defaultHeader //{ 'Content-Type': 'text/xml' }							
 								}; 
 							break;
 							default: 
-								connData = {url: realURL, body: xml, headers: { 'Content-Type': 'text/xml' }}; 
+								connData = {url: realURL, body: xml, headers: defaultHeader}; //{ 'Content-Type': 'text/xml' }}; 
 							break;
 						}
 							httpntlm.post(connData, function (err, res){
