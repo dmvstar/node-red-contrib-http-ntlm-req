@@ -17,6 +17,7 @@ module.exports = function(RED) {
 		var connData = {url: realURL, username: "", password: "", domain: "", workstation: ""}; 
 		
 		var requestFail = false, requestError = '';
+		node.status({});
 
         try {
 			node.on('input', function(msg) {
@@ -51,6 +52,8 @@ module.exports = function(RED) {
 							break;
 						}
 						httpntlm.get(connData, function (err, res){
+							node.status({});
+
 							requestFail = false;
 							requestError = '';
 							if(res !== undefined && res.body !== undefined) {
@@ -59,7 +62,6 @@ module.exports = function(RED) {
 								if(res.statusCode !== 200) { 
 									requestFail = true; 
 									requestError = 'Response from server: '+res.statusCode;
-									//var requestMessage = searchKey();
 									node.status({fill: "red", shape: "dot", text: requestError});
 									node.error(requestError, msg);
 								}
@@ -95,6 +97,8 @@ module.exports = function(RED) {
 							break;
 						}
 							httpntlm.post(connData, function (err, res){
+							node.status({});
+								
 							requestFail = false;
 							requestError = '';
 
@@ -104,6 +108,13 @@ module.exports = function(RED) {
 								if(res.statusCode !== 200) { 
 									requestFail = true; 
 									requestError = 'Response from server: '+res.statusCode;
+									/*
+									if(retValue.indexOf('<faultstring>')>0){
+										var addInfo = retValue.substring(retValue.indexOf('<faultstring>')+'<faultstring>'.length, retValue.indexOf('</faultstring>'));
+										requestError += '\n'+ addInfo;
+									}
+									*/
+									
 									node.status({fill: "red", shape: "dot", text: requestError});
 									node.error(requestError, msg);
 								}
@@ -132,7 +143,7 @@ if(debug){
 									node.status({fill: "red", shape: "dot", text: err.message});
 									node.error(err.message, msg);
 								}	
-							}
+							} 
 							node.send(msg);
 						});	
 					break;
