@@ -1,7 +1,7 @@
 {
 	"name": "node-red-contrib-http-ntlm-req",
 	"description": "HTTP request with NTLM",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/dmvstar/node-red-contrib-http-ntlm-req.git"
