@@ -25,6 +25,7 @@ module.exports = function (RED) {
 				if (res !== undefined && res.body !== undefined) {
 					//msg.payload = JSON.parse(res.body);
 					msg.payload = res.body;
+					msg.statusCode = res.statusCode;
 					msg.headers = res.headers || {}; // return headers
 					if (res.statusCode >= 400) {
 						raiseError('Response from server: ' + res.statusCode, msg);
@@ -38,15 +39,21 @@ module.exports = function (RED) {
 
 			var params = (typeof msg.params === 'undefined') ? "" : msg.params;
 			var url = (typeof msg.url === 'undefined') ? node.url : msg.url;
+			var authconf = node.authconf; 
 
+			if(msg.ntlm_config !== undefined) {
+				authconf.user  = (typeof msg.ntlm_config.user  !== 'undefined') ? msg.ntlm_config.user  : node.authconf.user;
+				authconf.pass  = (typeof msg.ntlm_config.pass  !== 'undefined') ? msg.ntlm_config.pass  : node.authconf.pass;
+				authconf.doman = (typeof msg.ntlm_config.doman !== 'undefined') ? msg.ntlm_config.doman : node.authconf.doman;
+			}
 			const connData = {
-				username: node.authconf.user,
-				password: node.authconf.pass,
-				domain: node.authconf.doman,
+				username: authconf.user,
+				password: authconf.pass,
+				domain: authconf.doman,
 				workstation: '',
 				headers: (typeof msg.headers === 'undefined') ? {} : msg.headers
 			};
-
+			console.log("[connData]",connData);
 			switch (parseInt(node.method)) {
 				case 0: // GET
 					{
