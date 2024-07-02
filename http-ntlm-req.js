@@ -1,172 +1,90 @@
-module.exports = function(RED) {
-    function HttpNtlmReqNode(config) {
+module.exports = function (RED) {
+	function HttpNtlmReqNode(config) {
 		var httpntlm = require('httpntlm');
-		var fs = require('fs');
-		
-        RED.nodes.createNode(this, config);
-        var node = this;
-		
-        this.name = config.name;
-        this.url  = config.url;
-        this.method  = config.method;
-        this.authconf = RED.nodes.getNode(config.auth);
-		var realURL = node.url
-		
-		var debug = false;
 
-		var connData = {url: realURL, username: "", password: "", domain: "", workstation: ""}; 
-		
-		var requestFail = false, requestError = '';
-		node.status({});
+		RED.nodes.createNode(this, config);
+		const node = this;
 
-        try {
-			node.on('input', function(msg) {
-				var method = node.method;
-				var retValue = "";
-				var defaulHeader = {};
-				var contentTypeHeader = 'application/json'; //'text/xml;charset=UTF-8';
-				if( msg.headers !== undefined )	defaultHeader = msg.headers;
-				if( msg.headers['Content-Type'] === undefined ) msg.headers['Content-Type'] = contentTypeHeader;
+		const resetStatus = () => node.status({});
+		const raiseError = (text, msg) => {
+			node.status({ fill: "red", shape: "dot", text: text });
+			node.error(text, msg);
+		};
 
-if(debug){
-	console.log(msg.headers);
-}
-				
-				if(msg.method !== undefined) {
-					switch (msg.method) {
-						case 'GET':
-							method = '0';
-						break;
-						case 'POST':
-							method = '1';
+		node.name = config.name;
+		node.url = config.url;
+		node.method = config.method;
+		node.authconf = RED.nodes.getNode(config.auth);
+
+		resetStatus();
+
+		node.on('input', function (msg) {
+			const requestCallback = (err, res) => {
+				resetStatus();
+				//console.log("[requestCallback]", res)
+				if (res !== undefined && res.body !== undefined) {
+					//msg.payload = JSON.parse(res.body);
+					msg.payload = res.body;
+					msg.headers = res.headers || {}; // return headers
+					if (res.statusCode >= 400) {
+						raiseError('Response from server: ' + res.statusCode, msg);
+					}
+				} else {
+					raiseError(err.message, msg);
+				}
+
+				node.send(msg);
+			};
+
+			var params = (typeof msg.params === 'undefined') ? "" : msg.params;
+			var url = (typeof msg.url === 'undefined') ? node.url : msg.url;
+
+			const connData = {
+				username: node.authconf.user,
+				password: node.authconf.pass,
+				domain: node.authconf.doman,
+				workstation: '',
+				headers: (typeof msg.headers === 'undefined') ? {} : msg.headers
+			};
+
+			switch (parseInt(node.method)) {
+				case 0: // GET
+					{
+						connData.url = url + params;
+						httpntlm.get(connData, requestCallback);
 						break;
 					}
-				}
-//node.warn('0 node.method ['+node.method+'] method ['+method+'] msg.method ['+msg.method+']');
-				switch (method) {
-					// GET
-					case '0':
-						realURL = this.url + msg.payload;
-						switch (node.authconf.auth) {
-							case '5':
-								connData = {
-									url: realURL, 
-									username: node.authconf.user, 
-									password: node.authconf.pass, 
-									domain: node.authconf.doman, 
-									workstation: ''}; 
-							break;
-							default: 
-								connData = {url: realURL}; 
-							break;
+				case 1: // POST
+					{
+						connData.url = url + params;
+						if (msg.payload !== undefined) {
+							//console.log(msg.payload);
+							//connData.body =  JSON.stringify(msg.payload);
+							connData.body = (typeof msg.payload === 'object') ? JSON.stringify(msg.payload) : msg.payload;							
+							connData.headers['Content-Type'] = (typeof connData.headers['Content-Type'] === 'undefined') ? 'application/json' : connData.headers['Content-Type'];
 						}
-						httpntlm.get(connData, function (err, res){
-							node.status({});
-
-							requestFail = false;
-							requestError = '';
-							if(res !== undefined && res.body !== undefined) {
-								retValue = res.body;
-								msg.payload = retValue;
-								if(res.statusCode !== 200) { 
-									requestFail = true; 
-									requestError = 'Response from server: '+res.statusCode;
-									node.status({fill: "red", shape: "dot", text: requestError});
-									node.error(requestError, msg);
-								}
-							} else {
-								node.status({fill: "red", shape: "dot", text: err.message});
-								node.error(err.message, msg);
-								//throw new Error('No body in response !');
-							}
-							//if(requestFail) throw new Error(requestError);
-							node.send(msg);
-						});	
-					break;
-					case '1':
-						// POST
-						realURL = this.url;
-						connData.url = realURL; 
-						var xml = msg.payload;						
-						var postURL = this.url;
-						switch (node.authconf.auth) {
-							case '5':
-								connData = {
-										url: postURL, 
-										username: node.authconf.user, 
-										password: node.authconf.pass, 
-										domain: node.authconf.doman, 
-										workstation: '',
-										body: xml,
-										headers: defaultHeader //{ 'Content-Type': 'text/xml' }							
-								}; 
-							break;
-							default: 
-								connData = {url: realURL, body: xml, headers: defaultHeader}; //{ 'Content-Type': 'text/xml' }}; 
-							break;
+						httpntlm.post(connData, requestCallback);
+						break;
+					}
+				case 2: // PUT
+					{
+						connData.url = url + params;
+						if (msg.payload !== undefined) {
+							//connData.body = JSON.stringify(msg.payload);
+							connData.body = (typeof msg.payload === 'object') ? JSON.stringify(msg.payload) : msg.payload;
+							connData.headers['Content-Type'] = (typeof connData.headers['Content-Type'] === 'undefined') ? 'application/json' : connData.headers['Content-Type'];
 						}
-							httpntlm.post(connData, function (err, res){
-							node.status({});
-								
-							requestFail = false;
-							requestError = '';
+						httpntlm.put(connData, requestCallback);
+						break;
+					}
+				default:
+					{
+						raiseError('No method defined!', msg);
+						break;
+					}
+			}
+		});
+	}
 
-							if(res !== undefined && res.body !== undefined) {
-								retValue = res.body;
-								msg.payload = retValue;
-								if(res.statusCode !== 200) { 
-									requestFail = true; 
-									requestError = 'Response from server: '+res.statusCode;
-									/*
-									if(retValue.indexOf('<faultstring>')>0){
-										var addInfo = retValue.substring(retValue.indexOf('<faultstring>')+'<faultstring>'.length, retValue.indexOf('</faultstring>'));
-										requestError += '\n'+ addInfo;
-									}
-									*/
-									
-									node.status({fill: "red", shape: "dot", text: requestError});
-									node.error(requestError, msg);
-								}
-if(debug){
-	fs.writeFile('POST_Result_'+node.name+'.json', JSON.stringify(res), function(){});	
-	console.log(res);
-	console.log(res.statusCode);
-}
-							} else {
-								node.status({fill: "red", shape: "dot", text: err.message});
-								node.error(err.message, msg);
-if(debug){
-	fs.writeFile('POST_Error_'+node.name+'.json', JSON.stringify(err), function(){});	
-	console.log(err);
-}	
-								//throw new Error('No body in response !');
-							}
-							if(requestFail) {
-								try {
-									var convert = require('xml-js');
-									var result = convert.xml2json(retValue, {compact: true, spaces: 4});
-if(debug){
-	fs.writeFile('POST_ErrorR_'+node.name+'.json', result, function(){});	
-}
-								} catch (err) {
-									node.status({fill: "red", shape: "dot", text: err.message});
-									node.error(err.message, msg);
-								}	
-							} 
-							node.send(msg);
-						});	
-					break;
-					default:
-						node.status({fill: "red", shape: "dot", text: err.message});
-						node.error('No method defined ! ['+postURL+']');
-						//throw new Error('No method defined !');
-					break;
-				}
-			});
-        } catch (err) {
-            node.status({fill: "red", shape: "dot", text: err.message});
-            node.error(err.message, msg);
-        }
-    }
-    RED.nodes.registerType("http-ntlm-req",HttpNtlmReqNode);
+	RED.nodes.registerType("http-ntlm-req", HttpNtlmReqNode);
 }

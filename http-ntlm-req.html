@@ -3,9 +3,9 @@
         category: 'function',
         color: '#a6bbcf',
         defaults: {
-            name: 	{value:""},
-            url:  	{ value: "",  required: true },
-            method:	{ value: 0 ,  required: true},
+            name: 	{value: "", required: false},
+            url:  	{value: "", required: false},
+            method:	{value: 0 , required: true},
             auth:	{value: "", type: "http-ntlm-req-config"}
         },
         inputs:1,
@@ -26,23 +26,24 @@
 	
     <div class="form-row">
         <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-        <input type="text" id="node-input-url" placeholder="URL">
+        <input type="text" id="node-input-url" placeholder="[Optional] If not set, you must define msg.url with the URL.">
     </div>
-	
+
     <div class="form-row">
         <label for="node-input-auth"><i class="icon-tag"></i> Auth</label>
         <input type="text" id="node-input-auth" placeholder="Auth">
     </div>
-	
+
     <div class="form-row">
         <label for="node-input-method"><i class="fa fa-unlock"></i> Method</label>
         <select type="text" id="node-input-method">
             <option value="0">GET</option>
             <option value="1">POST</option>
+            <option value="2">PUT</option>
         </select>
     </div>
 
-	
+
 </script>
 
 <script type="text/x-red" data-help-name="http-ntlm-req">
@@ -50,10 +51,18 @@
     <p>To set up HTTP request, create a new soap config </p>
     <p>
         <ul>
-	            <li>If defined msg.method then override selected method in node.</li>
-	            <li>For GET method msg.payload used as additional for url (for example ?wsdl for get WSDL or ?param1=1&amp;param2=2).</li>
-	            <li>For POST method msg.payload used as content for post.</li>
+            <li>If defined msg.method then override selected method in node.</li>
+            <li>For GET method msg.payload is not used.</li>
+            <li>For POST method msg.payload used as content for body.</li>
+            <li>For PUT method msg.payload used as content for body.</li>
         </ul>
     </p>
-		
+    <p>You can use the msg.params value, in all three methods, that is going to be concatenated to the url (for example, given a url https://example.com and msg.params="?param1=1&amp;param2=2", the final URL is going to be https://example.com?param1=1&amp;param2=2)</p>
+    <p>You can also define msg.headers with a dictonary of headers:
+    <code>
+    msg.headers = {
+       'Accept': 'application/json, text/plain, */*',
+    }
+    </code>
+    </p>
 </script>
